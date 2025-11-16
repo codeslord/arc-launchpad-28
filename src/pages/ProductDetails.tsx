@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp, ArrowLeft, ExternalLink, MessageSquare, Play, Image as ImageIcon, Share2 } from "lucide-react";
-import { useWallet } from "@/hooks/useWallet";
+import { useCircleWallet } from "@/hooks/useCircleWallet";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,7 @@ interface Comment {
 const ProductDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { address, connect, disconnect, isConnected, isConnecting, signMessage } = useWallet();
+  const { address, connect, disconnect, isConnected, isConnecting, signMessage } = useCircleWallet();
   const { toast } = useToast();
   
   const [product, setProduct] = useState<any>(null);

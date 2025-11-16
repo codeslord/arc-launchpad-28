@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { ProductCard } from "@/components/ProductCard";
-import { Leaderboard } from "@/components/Leaderboard";
 import { SubmitProductDialog } from "@/components/SubmitProductDialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TrendingUp } from "lucide-react";
-import { useWallet } from "@/hooks/useWallet";
+import { useCircleWallet } from "@/hooks/useCircleWallet";
 import { useToast } from "@/hooks/use-toast";
 
 interface Product {
@@ -25,7 +26,7 @@ const Index = () => {
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { address, connect, disconnect, isConnected, isConnecting, signMessage } = useWallet();
+  const { address, connect, disconnect, isConnected, isConnecting, signMessage } = useCircleWallet();
   const { toast } = useToast();
 
   // Expose signMessage to window for use in other components
@@ -178,8 +179,16 @@ const Index = () => {
         </div>
       </div>
       
-      <div id="leaderboard">
-        <Leaderboard />
+      <div className="container mx-auto px-4 py-16 border-t border-glass-border" id="leaderboard">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Top Products</h2>
+          <p className="text-muted-foreground mb-6">Check out the highest-rated products</p>
+          <Link to="/leaderboard">
+            <Button className="bg-gradient-to-r from-orange to-orange-light hover:shadow-glass text-white">
+              View Full Leaderboard
+            </Button>
+          </Link>
+        </div>
       </div>
       
       <div className="container mx-auto px-4 py-16 border-t border-border" id="how-it-works">
