@@ -1,28 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { ethers } from 'ethers';
 
 export function useCircleWallet() {
   const [address, setAddress] = useState<string | null>(null);
+  const [wallet, setWallet] = useState<ethers.HDNodeWallet | ethers.Wallet | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
 
   // Load saved wallet from localStorage on mount
   useEffect(() => {
-    const savedAddress = localStorage.getItem('wallet_address');
-    if (savedAddress) {
-      setAddress(savedAddress);
+    const savedPrivateKey = localStorage.getItem('wallet_private_key');
+    if (savedPrivateKey) {
+      try {
+        const restoredWallet = new ethers.Wallet(savedPrivateKey);
+        setWallet(restoredWallet);
+        setAddress(restoredWallet.address);
+      } catch (error) {
+        console.error('Failed to restore wallet:', error);
+        localStorage.removeItem('wallet_private_key');
+      }
     }
   }, []);
 
   const signMessage = async (action: string): Promise<{ signature: string; message: string; timestamp: number } | null> => {
-    if (!address) return null;
+    if (!wallet || !address) return null;
     
     const timestamp = Date.now();
     const message = `ArcHunt Action\nWallet: ${address.toLowerCase()}\nTimestamp: ${timestamp}\nAction: ${action}`;
     
     try {
-      // For demo purposes, create a simple signature
-      const signature = `0x${Buffer.from(message + address).toString('hex').substring(0, 130)}`;
+      const signature = await wallet.signMessage(message);
       return { signature, message, timestamp };
     } catch (error) {
       console.error('Signature error:', error);
@@ -38,15 +46,13 @@ export function useCircleWallet() {
   const connect = async () => {
     setIsConnecting(true);
     try {
-      // Generate a wallet address using browser's crypto API
-      const randomBytes = new Uint8Array(20);
-      crypto.getRandomValues(randomBytes);
-      const walletAddress = '0x' + Array.from(randomBytes)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+      // Generate a new wallet
+      const newWallet = ethers.Wallet.createRandom();
+      const walletAddress = newWallet.address;
 
+      setWallet(newWallet);
       setAddress(walletAddress);
-      localStorage.setItem('wallet_address', walletAddress);
+      localStorage.setItem('wallet_private_key', newWallet.privateKey);
       
       toast({
         title: "Wallet Connected",
@@ -65,8 +71,9 @@ export function useCircleWallet() {
   };
 
   const disconnect = () => {
+    setWallet(null);
     setAddress(null);
-    localStorage.removeItem('wallet_address');
+    localStorage.removeItem('wallet_private_key');
     toast({
       title: "Wallet Disconnected",
       description: "Your wallet has been disconnected.",
