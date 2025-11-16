@@ -36,6 +36,9 @@ export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walle
     description: "",
     category: "",
     makerAddress: "",
+    websiteUrl: "",
+    youtubeUrl: "",
+    imageUrl: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,6 +83,9 @@ export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walle
           description: formData.description,
           makerAddress: formData.makerAddress,
           category: formData.category || 'General',
+          websiteUrl: formData.websiteUrl,
+          youtubeUrl: formData.youtubeUrl,
+          imageUrl: formData.imageUrl,
           signature: signatureData.signature,
           message: signatureData.message,
           timestamp: signatureData.timestamp,
@@ -109,6 +115,9 @@ export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walle
         description: "",
         category: "",
         makerAddress: "",
+        websiteUrl: "",
+        youtubeUrl: "",
+        imageUrl: "",
       });
     } catch (error) {
       console.error('Error submitting product:', error);
@@ -207,6 +216,43 @@ export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walle
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="websiteUrl" className="text-navy font-semibold">Website URL</Label>
+            <Input
+              id="websiteUrl"
+              type="url"
+              placeholder="https://yourproduct.com"
+              value={formData.websiteUrl}
+              onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+              className="glass border-glass-border focus:border-orange"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="youtubeUrl" className="text-navy font-semibold">YouTube Video URL</Label>
+            <Input
+              id="youtubeUrl"
+              type="url"
+              placeholder="https://youtube.com/watch?v=..."
+              value={formData.youtubeUrl}
+              onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+              className="glass border-glass-border focus:border-orange"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="imageUrl" className="text-navy font-semibold">Product Image URL</Label>
+            <Input
+              id="imageUrl"
+              type="url"
+              placeholder="https://example.com/image.png"
+              value={formData.imageUrl}
+              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+              className="glass border-glass-border focus:border-orange"
+            />
+            <p className="text-xs text-navy/60 font-medium">Direct link to your product screenshot or logo</p>
           </div>
 
           <div className="flex gap-3 pt-4">

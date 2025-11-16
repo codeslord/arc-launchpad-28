@@ -47,6 +47,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           maker_address: string
           payout_data: Json | null
           payout_status: string
@@ -54,12 +55,15 @@ export type Database = {
           title: string
           updated_at: string
           vote_count: number
+          website_url: string | null
+          youtube_url: string | null
         }
         Insert: {
           category?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           maker_address: string
           payout_data?: Json | null
           payout_status?: string
@@ -67,12 +71,15 @@ export type Database = {
           title: string
           updated_at?: string
           vote_count?: number
+          website_url?: string | null
+          youtube_url?: string | null
         }
         Update: {
           category?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           maker_address?: string
           payout_data?: Json | null
           payout_status?: string
@@ -80,6 +87,8 @@ export type Database = {
           title?: string
           updated_at?: string
           vote_count?: number
+          website_url?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
