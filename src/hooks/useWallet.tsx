@@ -1,5 +1,13 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { ethers, Eip1193Provider } from 'ethers';
+
+// Type assertion for window.ethereum
+declare global {
+  interface Window {
+    ethereum?: Eip1193Provider & { isMetaMask?: boolean };
+  }
+}
 
 export function useWallet() {
   const [address, setAddress] = useState<string | null>(null);
@@ -12,33 +20,57 @@ export function useWallet() {
     const timestamp = Date.now();
     const message = `ArcHunt Action\nWallet: ${address.toLowerCase()}\nTimestamp: ${timestamp}\nAction: ${action}`;
     
-    // In production, this would use the actual wallet SDK to sign
-    // For now, we create a mock signature that can be verified server-side
-    const signature = btoa(`${address}:${timestamp}:${action}`);
-    
-    return { signature, message, timestamp };
+    try {
+      // Request signature from browser wallet (MetaMask, etc.)
+      if (!window.ethereum) {
+        toast({
+          title: "No Wallet Found",
+          description: "Please install MetaMask or another Ethereum wallet to sign messages.",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // Request signature from wallet provider
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const signature = await signer.signMessage(message);
+      
+      return { signature, message, timestamp };
+    } catch (error) {
+      console.error('Signature error:', error);
+      toast({
+        title: "Signature Failed",
+        description: "Failed to sign message with wallet. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
   };
 
   const connect = async () => {
     setIsConnecting(true);
     try {
-      // Validate wallet address format
-      const testAddress = prompt('Enter your Arc wallet address (format: 0x + 40 hex characters):');
-      if (testAddress) {
-        // Validate format
-        if (!/^0x[a-fA-F0-9]{40}$/.test(testAddress)) {
-          toast({
-            title: "Invalid Address",
-            description: "Please enter a valid wallet address (0x followed by 40 hex characters)",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        setAddress(testAddress.toLowerCase());
+      // Request wallet connection from browser extension
+      if (!window.ethereum) {
+        toast({
+          title: "No Wallet Found",
+          description: "Please install MetaMask or another Ethereum wallet.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Request account access
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      
+      if (accounts && accounts.length > 0) {
+        const walletAddress = accounts[0].toLowerCase();
+        setAddress(walletAddress);
         toast({
           title: "Wallet Connected",
-          description: `Connected to ${testAddress.slice(0, 6)}...${testAddress.slice(-4)}`,
+          description: `Connected to ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
         });
       }
     } catch (error) {

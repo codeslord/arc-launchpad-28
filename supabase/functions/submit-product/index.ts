@@ -26,8 +26,8 @@ serve(async (req) => {
 
     const { title, tagline, description, makerAddress, category, signature, message, timestamp } = validation.data;
     
-    // Verify signature message format
-    const sigVerification = verifySignatureMessage(makerAddress, message, timestamp);
+    // Verify cryptographic signature
+    const sigVerification = verifySignatureMessage(makerAddress, message, signature, timestamp);
     if (!sigVerification.valid) {
       return new Response(
         JSON.stringify({ error: sigVerification.error || 'Invalid signature' }),
@@ -35,8 +35,8 @@ serve(async (req) => {
       );
     }
 
-    // Rate limiting per wallet address
-    if (!checkRateLimit(`submit:${makerAddress}`, 5, 24 * 60 * 60 * 1000)) {
+    // Rate limiting per wallet address (database-backed)
+    if (!(await checkRateLimit(`submit:${makerAddress}`, 5, 24 * 60 * 60 * 1000))) {
       return new Response(
         JSON.stringify({ error: 'Rate limit exceeded. Maximum 5 products per wallet per day.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

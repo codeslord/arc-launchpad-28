@@ -56,6 +56,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          count: number
+          identifier: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          identifier: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          identifier?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       votes: {
         Row: {
           created_at: string
@@ -90,7 +111,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
