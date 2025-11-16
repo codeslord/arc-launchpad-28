@@ -16,11 +16,13 @@ interface Product {
   vote_count: number;
   payout_status: string;
   category?: string;
+  created_at: string;
 }
 
 const Leaderboard = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('all');
   const { address, connect, disconnect, isConnected, isConnecting } = useCircleWallet();
   const { toast } = useToast();
 
@@ -28,8 +30,7 @@ const Leaderboard = () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/products`);
       const data = await response.json();
-      const sorted = (data.products || []).sort((a: Product, b: Product) => b.vote_count - a.vote_count);
-      setProducts(sorted.slice(0, 10)); // Top 10
+      setProducts(data.products || []);
     } catch (error) {
       console.error('Error loading products:', error);
       toast({
@@ -40,6 +41,36 @@ const Leaderboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getFilteredProducts = () => {
+    let filtered = [...products];
+
+    // Apply time filter
+    if (timeFilter !== 'all') {
+      const now = new Date();
+      const cutoffDate = new Date();
+      
+      switch (timeFilter) {
+        case 'day':
+          cutoffDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          cutoffDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          cutoffDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          cutoffDate.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+      
+      filtered = filtered.filter(p => new Date(p.created_at) >= cutoffDate);
+    }
+
+    // Sort by votes and return top 10
+    return filtered.sort((a, b) => b.vote_count - a.vote_count).slice(0, 10);
   };
 
   useEffect(() => {
@@ -64,29 +95,47 @@ const Leaderboard = () => {
             </Button>
           </Link>
 
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Trophy className="w-10 h-10 text-orange" />
               <h1 className="text-4xl font-bold bg-gradient-to-r from-orange to-orange-light bg-clip-text text-transparent">
                 Top Products Leaderboard
               </h1>
             </div>
-            <p className="text-navy/70 text-lg">
+            <p className="text-navy/70 text-lg mb-6">
               The most upvoted products and their makers
             </p>
+
+            {/* Time Filter */}
+            <div className="flex items-center justify-center gap-2 glass p-4 rounded-xl max-w-2xl mx-auto">
+              <span className="text-sm font-semibold text-navy/70">Time Period:</span>
+              <div className="flex gap-2 flex-wrap justify-center">
+                {['day', 'week', 'month', 'year', 'all'].map((filter) => (
+                  <Button
+                    key={filter}
+                    variant={timeFilter === filter ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setTimeFilter(filter as typeof timeFilter)}
+                    className={timeFilter === filter ? 'bg-gradient-to-r from-orange to-orange-light text-white' : 'glass border-glass-border'}
+                  >
+                    {filter === 'all' ? 'All Time' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {loading ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">Loading leaderboard...</p>
             </div>
-          ) : products.length === 0 ? (
+          ) : getFilteredProducts().length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No products yet. Be the first to launch!</p>
+              <p className="text-muted-foreground">No products found in this time period. Try a different filter!</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {products.map((product, index) => {
+              {getFilteredProducts().map((product, index) => {
                 const rank = index + 1;
                 const isTopThree = rank <= 3;
                 const medalEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';

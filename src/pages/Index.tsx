@@ -26,6 +26,8 @@ const Index = () => {
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<'recent' | 'votes'>('votes');
+  const [timeFilter, setTimeFilter] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('all');
   const { address, connect, disconnect, isConnected, isConnecting, signMessage } = useCircleWallet();
   const { toast } = useToast();
 
@@ -52,6 +54,42 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getFilteredProducts = () => {
+    let filtered = [...products];
+
+    // Apply time filter
+    if (timeFilter !== 'all') {
+      const now = new Date();
+      const cutoffDate = new Date();
+      
+      switch (timeFilter) {
+        case 'day':
+          cutoffDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          cutoffDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          cutoffDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          cutoffDate.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+      
+      filtered = filtered.filter(p => new Date(p.created_at) >= cutoffDate);
+    }
+
+    // Apply sort
+    if (sortBy === 'votes') {
+      filtered.sort((a, b) => b.vote_count - a.vote_count);
+    } else {
+      filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    return filtered;
   };
 
   useEffect(() => {
@@ -133,30 +171,74 @@ const Index = () => {
       
       <div className="container mx-auto px-4 py-12" id="products">
         <div className="max-w-5xl mx-auto space-y-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="text-3xl font-bold text-foreground">Today's Launches</h2>
-              <Badge variant="outline" className="bg-emerald/10 border-emerald text-emerald">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                {products.length} Active
-              </Badge>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h2 className="text-3xl font-bold text-foreground">Today's Launches</h2>
+                <Badge variant="outline" className="bg-emerald/10 border-emerald text-emerald">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  {getFilteredProducts().length} Active
+                </Badge>
+              </div>
+              <span className="text-sm text-muted-foreground hidden md:block">
+                10 votes = 1 USDC payout
+              </span>
             </div>
-            <span className="text-sm text-muted-foreground">
-              Sorted by upvotes · 10 votes = 1 USDC payout
-            </span>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4 items-center justify-between glass p-4 rounded-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-navy/70">Sort by:</span>
+                <div className="flex gap-2">
+                  <Button
+                    variant={sortBy === 'votes' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSortBy('votes')}
+                    className={sortBy === 'votes' ? 'bg-gradient-to-r from-orange to-orange-light text-white' : 'glass border-glass-border'}
+                  >
+                    Most Voted
+                  </Button>
+                  <Button
+                    variant={sortBy === 'recent' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSortBy('recent')}
+                    className={sortBy === 'recent' ? 'bg-gradient-to-r from-orange to-orange-light text-white' : 'glass border-glass-border'}
+                  >
+                    Most Recent
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-navy/70">Time:</span>
+                <div className="flex gap-2 flex-wrap">
+                  {['day', 'week', 'month', 'year', 'all'].map((filter) => (
+                    <Button
+                      key={filter}
+                      variant={timeFilter === filter ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeFilter(filter as typeof timeFilter)}
+                      className={timeFilter === filter ? 'bg-gradient-to-r from-orange to-orange-light text-white' : 'glass border-glass-border'}
+                    >
+                      {filter === 'all' ? 'All Time' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
           
           {loading ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">Loading products...</p>
             </div>
-          ) : products.length === 0 ? (
+          ) : getFilteredProducts().length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No products yet. Be the first to launch!</p>
+              <p className="text-muted-foreground">No products found with these filters. Try adjusting your selection!</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {products.map((product, index) => (
+              {getFilteredProducts().map((product, index) => (
                 <ProductCard 
                   key={product.id} 
                   id={product.id}
