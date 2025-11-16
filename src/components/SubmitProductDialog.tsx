@@ -23,32 +23,83 @@ import { useToast } from "@/hooks/use-toast";
 interface SubmitProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSubmitSuccess?: () => void;
+  walletAddress?: string | null;
 }
 
-export const SubmitProductDialog = ({ open, onOpenChange }: SubmitProductDialogProps) => {
+export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walletAddress }: SubmitProductDialogProps) => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    title: "",
     tagline: "",
     description: "",
-    url: "",
     category: "",
+    makerAddress: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Product Submitted! 🚀",
-      description: "Your product is now live and ready to receive upvotes.",
-    });
-    onOpenChange(false);
-    setFormData({
-      name: "",
-      tagline: "",
-      description: "",
-      url: "",
-      category: "",
-    });
+    
+    if (!formData.makerAddress) {
+      toast({
+        title: "Wallet Required",
+        description: "Please provide a wallet address to receive payouts.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-product`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          tagline: formData.tagline,
+          description: formData.description,
+          makerAddress: formData.makerAddress,
+          category: formData.category || 'General',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit product');
+      }
+
+      toast({
+        title: "Product Submitted! 🚀",
+        description: "Your product is now live and ready to receive upvotes.",
+      });
+      
+      onOpenChange(false);
+      if (onSubmitSuccess) {
+        onSubmitSuccess();
+      }
+      
+      setFormData({
+        title: "",
+        tagline: "",
+        description: "",
+        category: "",
+        makerAddress: "",
+      });
+    } catch (error) {
+      console.error('Error submitting product:', error);
+      toast({
+        title: "Submission Failed",
+        description: error instanceof Error ? error.message : "Could not submit product. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -68,12 +119,12 @@ export const SubmitProductDialog = ({ open, onOpenChange }: SubmitProductDialogP
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Product Name *</Label>
+            <Label htmlFor="title">Product Name *</Label>
             <Input
-              id="name"
+              id="title"
               placeholder="My Awesome Product"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
               className="bg-secondary/50 border-border"
             />
@@ -92,29 +143,28 @@ export const SubmitProductDialog = ({ open, onOpenChange }: SubmitProductDialogP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               placeholder="Tell the community more about your product..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              required
               rows={4}
               className="bg-secondary/50 border-border resize-none"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="url">Product URL *</Label>
+            <Label htmlFor="makerAddress">Payout Wallet Address *</Label>
             <Input
-              id="url"
-              type="url"
-              placeholder="https://yourproduct.com"
-              value={formData.url}
-              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+              id="makerAddress"
+              placeholder="0x..."
+              value={formData.makerAddress || (walletAddress || '')}
+              onChange={(e) => setFormData({ ...formData, makerAddress: e.target.value })}
               required
               className="bg-secondary/50 border-border"
             />
+            <p className="text-xs text-muted-foreground">Arc testnet address where you'll receive USDC payouts</p>
           </div>
 
           <div className="space-y-2">
@@ -150,9 +200,10 @@ export const SubmitProductDialog = ({ open, onOpenChange }: SubmitProductDialogP
             </Button>
             <Button
               type="submit"
+              disabled={isSubmitting}
               className="flex-1 bg-gradient-to-r from-emerald to-emerald-glow hover:opacity-90 text-background"
             >
-              Launch Product
+              {isSubmitting ? 'Submitting...' : 'Launch Product 🚀'}
             </Button>
           </div>
         </form>

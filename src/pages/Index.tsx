@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { ProductCard } from "@/components/ProductCard";
@@ -6,74 +6,106 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { SubmitProductDialog } from "@/components/SubmitProductDialog";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp } from "lucide-react";
+import { useWallet } from "@/hooks/useWallet";
+import { useToast } from "@/hooks/use-toast";
 
-const products = [
-  {
-    id: "1",
-    name: "DeFi Dashboard Pro",
-    tagline: "Professional-grade DeFi portfolio management",
-    description: "Track, analyze, and optimize your DeFi investments across 50+ protocols with real-time analytics and automated yield strategies.",
-    upvotes: 542,
-    comments: 87,
-    reward: 54.2,
-    category: "Finance",
-    maker: "Sarah Chen",
-    rank: 1,
-  },
-  {
-    id: "2",
-    name: "NFT Marketplace Hub",
-    tagline: "Cross-chain NFT discovery and trading",
-    description: "Discover, buy, and sell NFTs across multiple blockchains with zero fees for the first month. AI-powered recommendations included.",
-    upvotes: 487,
-    comments: 62,
-    reward: 48.7,
-    category: "Web3",
-    maker: "Alex Kumar",
-    rank: 2,
-  },
-  {
-    id: "3",
-    name: "AI Content Studio",
-    tagline: "Generate marketing content with AI",
-    description: "Create blog posts, social media content, and ad copy in seconds using cutting-edge AI models. Supports 30+ languages.",
-    upvotes: 423,
-    comments: 91,
-    reward: 42.3,
-    category: "AI Tools",
-    maker: "Maria Rodriguez",
-    rank: 3,
-  },
-  {
-    id: "4",
-    name: "Smart Contract Auditor",
-    tagline: "Automated security analysis for smart contracts",
-    description: "Scan your smart contracts for vulnerabilities using AI and industry-standard security patterns. Get detailed reports in minutes.",
-    upvotes: 356,
-    comments: 54,
-    reward: 35.6,
-    category: "Developer Tools",
-    maker: "David Park",
-  },
-  {
-    id: "5",
-    name: "Crypto Tax Calculator",
-    tagline: "Simplified tax reporting for crypto traders",
-    description: "Automatically calculate your crypto taxes across all exchanges and wallets. Export reports for major tax software.",
-    upvotes: 298,
-    comments: 43,
-    reward: 29.8,
-    category: "Finance",
-    maker: "Emma Thompson",
-  },
-];
+interface Product {
+  id: string;
+  title: string;
+  tagline?: string;
+  description?: string;
+  maker_address: string;
+  vote_count: number;
+  payout_status: string;
+  category?: string;
+  created_at: string;
+}
 
 const Index = () => {
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { address, connect, disconnect, isConnected, isConnecting } = useWallet();
+  const { toast } = useToast();
+
+  const loadProducts = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/products`);
+      const data = await response.json();
+      setProducts(data.products || []);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      toast({
+        title: "Error",
+        description: "Could not load products. Please refresh the page.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const handleVote = async (productId: string) => {
+    if (!isConnected || !address) {
+      toast({
+        title: "Connect Wallet",
+        description: "Please connect your wallet to vote.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId,
+          voterAddress: address,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast({
+          title: "Vote Failed",
+          description: data.error || "Could not record your vote.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Vote Recorded!",
+        description: `Total votes: ${data.votes}. ${data.payoutStatus === 'paid' ? '🎉 Payout triggered!' : ''}`,
+      });
+
+      loadProducts();
+    } catch (error) {
+      console.error('Error voting:', error);
+      toast({
+        title: "Error",
+        description: "Could not record your vote. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header 
+        walletAddress={address} 
+        onConnect={connect} 
+        onDisconnect={disconnect}
+        isConnecting={isConnecting}
+      />
       <Hero onLaunchClick={() => setSubmitDialogOpen(true)} />
       
       <div className="container mx-auto px-4 py-12" id="products">
@@ -87,15 +119,40 @@ const Index = () => {
               </Badge>
             </div>
             <span className="text-sm text-muted-foreground">
-              Sorted by upvotes · Refreshes daily at midnight PST
+              Sorted by upvotes · 10 votes = 1 USDC payout
             </span>
           </div>
           
-          <div className="space-y-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading products...</p>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No products yet. Be the first to launch!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {products.map((product, index) => (
+                <ProductCard 
+                  key={product.id} 
+                  id={product.id}
+                  name={product.title}
+                  tagline={product.tagline || ''}
+                  description={product.description || ''}
+                  upvotes={product.vote_count}
+                  comments={0}
+                  reward={product.vote_count / 10}
+                  category={product.category || 'General'}
+                  maker={product.maker_address}
+                  rank={index + 1}
+                  payoutStatus={product.payout_status}
+                  onVote={handleVote}
+                  canVote={isConnected}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
       
@@ -158,7 +215,12 @@ const Index = () => {
         </div>
       </footer>
       
-      <SubmitProductDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen} />
+      <SubmitProductDialog 
+        open={submitDialogOpen} 
+        onOpenChange={setSubmitDialogOpen}
+        onSubmitSuccess={loadProducts}
+        walletAddress={address}
+      />
     </div>
   );
 };

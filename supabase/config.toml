@@ -1,1 +1,13 @@
 project_id = "rcyffyufaphngsyjkpnr"
+
+[functions.submit-product]
+verify_jwt = false
+
+[functions.vote]
+verify_jwt = false
+
+[functions.get-client-key]
+verify_jwt = false
+
+[functions.products]
+verify_jwt = false
