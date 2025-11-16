@@ -26,6 +26,21 @@ export const submitProductSchema = z.object({
     "finance", "web3", "ai", "productivity", 
     "developer", "design", "other", "General"
   ]).default("General"),
+  websiteUrl: z.string()
+    .trim()
+    .url("Must be a valid URL")
+    .optional()
+    .or(z.literal("")),
+  youtubeUrl: z.string()
+    .trim()
+    .url("Must be a valid URL")
+    .optional()
+    .or(z.literal("")),
+  imageUrl: z.string()
+    .trim()
+    .url("Must be a valid URL")
+    .optional()
+    .or(z.literal("")),
   signature: z.string().min(1, "Wallet signature required"),
   message: z.string().min(1, "Signed message required"),
   timestamp: z.number().int().positive()

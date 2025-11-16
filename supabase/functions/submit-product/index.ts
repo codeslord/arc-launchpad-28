@@ -24,7 +24,7 @@ serve(async (req) => {
       );
     }
 
-    const { title, tagline, description, makerAddress, category, signature, message, timestamp } = validation.data;
+    const { title, tagline, description, makerAddress, category, websiteUrl, youtubeUrl, imageUrl, signature, message, timestamp } = validation.data;
     
     // Verify cryptographic signature
     const sigVerification = verifySignatureMessage(makerAddress, message, signature, timestamp);
@@ -56,6 +56,9 @@ serve(async (req) => {
         description: description ? sanitizeText(description) : null,
         maker_address: makerAddress,
         category,
+        website_url: websiteUrl || null,
+        youtube_url: youtubeUrl || null,
+        image_url: imageUrl || null,
         vote_count: 0,
         payout_status: 'none'
       })
