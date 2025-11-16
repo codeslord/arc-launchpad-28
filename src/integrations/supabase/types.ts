@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      circle_users: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          user_token: string
+          wallet_address: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          user_token: string
+          wallet_address?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          user_token?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null
