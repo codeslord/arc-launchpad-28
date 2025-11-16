@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,17 +39,26 @@ export const ProductCard = ({
   onVote,
   canVote = false
 }: ProductCardProps) => {
+  const navigate = useNavigate();
   const [hasUpvoted, setHasUpvoted] = useState(false);
   
-  const handleUpvote = () => {
+  const handleUpvote = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!hasUpvoted && onVote && canVote) {
       onVote(id);
       setHasUpvoted(true);
     }
   };
+
+  const handleCardClick = () => {
+    navigate(`/product/${id}`);
+  };
   
   return (
-    <Card className="group relative overflow-hidden glass hover:shadow-glass-hover hover:scale-[1.02] transition-all duration-300">
+    <Card 
+      className="group relative overflow-hidden glass hover:shadow-glass-hover hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="p-6 flex gap-6">
         {/* Upvote Section */}
         <div className="flex flex-col items-center gap-2 min-w-[60px]">
@@ -119,7 +129,15 @@ export const ProductCard = ({
                 <span className="text-sm font-bold text-orange">${reward.toFixed(1)} USDC</span>
               </div>
               
-              <Button variant="ghost" size="sm" className="text-navy/60 hover:text-orange">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-navy/60 hover:text-orange"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(`/product/${id}`, '_blank');
+                }}
+              >
                 <ExternalLink className="w-4 h-4" />
               </Button>
             </div>
