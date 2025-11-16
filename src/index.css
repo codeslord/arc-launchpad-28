@@ -8,54 +8,58 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 220 20% 8%;
-    --foreground: 180 5% 98%;
+    --background: 220 15% 96%;
+    --foreground: 220 20% 12%;
 
-    --card: 220 18% 11%;
-    --card-foreground: 180 5% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 12%;
 
-    --popover: 220 18% 11%;
-    --popover-foreground: 180 5% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 12%;
 
-    --primary: 168 76% 42%;
-    --primary-foreground: 220 20% 8%;
+    --primary: 14 100% 62%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 180 5% 98%;
+    --secondary: 220 15% 92%;
+    --secondary-foreground: 220 20% 12%;
 
-    --muted: 220 15% 15%;
-    --muted-foreground: 180 5% 65%;
+    --muted: 220 15% 88%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 200 95% 48%;
-    --accent-foreground: 220 20% 8%;
+    --accent: 220 20% 15%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 180 5% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 168 76% 42%;
+    --border: 220 15% 88%;
+    --input: 220 15% 92%;
+    --ring: 14 100% 62%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Custom tokens for Arc Hunt */
-    --emerald: 168 76% 42%;
-    --emerald-glow: 168 76% 52%;
-    --electric: 200 95% 48%;
-    --slate-dark: 220 18% 11%;
-    --slate-darker: 220 20% 8%;
+    /* Custom tokens for ArcHunt glassmorphic theme */
+    --orange: 14 100% 62%;
+    --orange-light: 14 100% 75%;
+    --navy: 220 20% 15%;
+    --navy-light: 220 15% 25%;
+    --glass-bg: 0 0% 100%;
+    --glass-border: 220 15% 85%;
+    
+    /* Glassmorphic effects */
+    --blur-sm: blur(8px);
+    --blur-md: blur(16px);
+    --blur-lg: blur(24px);
     
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(168 76% 42% / 0.15), hsl(200 95% 48% / 0.15));
-    --gradient-card: linear-gradient(180deg, hsl(220 18% 11%), hsl(220 20% 9%));
-    --gradient-primary: linear-gradient(135deg, hsl(168 76% 42%), hsl(168 76% 52%));
+    --gradient-orange: linear-gradient(135deg, hsl(14 100% 62%), hsl(14 100% 72%));
+    --gradient-bg: linear-gradient(180deg, hsl(220 15% 98%), hsl(220 15% 94%));
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.7), hsl(0 0% 100% / 0.3));
     
     /* Shadows */
-    --shadow-glow: 0 0 40px hsl(168 76% 42% / 0.3);
-    --shadow-card: 0 8px 32px hsl(220 20% 5% / 0.4);
-    
-    /* Animations */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-glass: 0 8px 32px 0 hsl(220 15% 50% / 0.1);
+    --shadow-glass-hover: 0 12px 48px 0 hsl(14 100% 62% / 0.15);
+    --shadow-orange: 0 8px 32px 0 hsl(14 100% 62% / 0.3);
   }
 }
 
@@ -65,6 +69,22 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-background via-secondary to-background text-foreground;
+    background-attachment: fixed;
+  }
+  
+  /* Glassmorphic utilities */
+  .glass {
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.7), hsl(0 0% 100% / 0.3));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--glass-border));
+  }
+  
+  .glass-strong {
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(0 0% 100% / 0.6));
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid hsl(var(--glass-border));
   }
 }

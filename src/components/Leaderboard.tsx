@@ -20,57 +20,57 @@ const topProducts: LeaderboardProduct[] = [
 
 export const Leaderboard = () => {
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="container mx-auto px-4 py-16">
+      <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-emerald/10 rounded-lg border border-emerald/20">
-            <Trophy className="w-6 h-6 text-emerald" />
+          <div className="p-3 glass rounded-xl shadow-glass">
+            <Trophy className="w-6 h-6 text-orange" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold text-foreground">Top Products Today</h2>
-            <p className="text-muted-foreground">Highest earning launches in the last 24 hours</p>
+            <h2 className="text-3xl font-bold text-navy">Top Products Today</h2>
+            <p className="text-navy/60 font-medium">Highest earning launches in the last 24 hours</p>
           </div>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {topProducts.map((product) => (
             <Card 
               key={product.rank}
-              className={`p-6 bg-gradient-to-r ${
+              className={`p-6 glass hover:shadow-glass-hover transition-all ${
                 product.rank === 1 
-                  ? "from-emerald/10 to-card border-emerald/30" 
-                  : "from-card to-card/50"
-              } border-border hover:border-emerald/20 transition-all`}
+                  ? "ring-2 ring-orange/20" 
+                  : ""
+              }`}
             >
               <div className="flex items-center gap-6">
                 <div className={`text-4xl font-bold ${
                   product.rank === 1 
-                    ? "text-emerald" 
+                    ? "text-orange" 
                     : product.rank === 2 
-                    ? "text-electric" 
-                    : "text-muted-foreground"
+                    ? "text-orange-light" 
+                    : "text-navy/50"
                 }`}>
                   #{product.rank}
                 </div>
                 
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-bold text-foreground">{product.name}</h3>
-                    <Badge variant="secondary" className="bg-secondary/50">
+                    <h3 className="text-lg font-bold text-navy">{product.name}</h3>
+                    <Badge variant="secondary" className="glass border-glass-border text-navy/80 font-semibold">
                       {product.category}
                     </Badge>
                     {product.rank <= 3 && (
-                      <Badge variant="outline" className="bg-emerald/10 border-emerald text-emerald">
+                      <Badge variant="outline" className="bg-orange/10 border-orange text-orange font-semibold">
                         <TrendingUp className="w-3 h-3 mr-1" />
                         Hot
                       </Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-6 text-sm">
-                    <span className="text-muted-foreground">
-                      <span className="font-semibold text-foreground">{product.upvotes}</span> upvotes
+                    <span className="text-navy/60 font-medium">
+                      <span className="font-bold text-navy">{product.upvotes}</span> upvotes
                     </span>
-                    <span className="text-emerald font-semibold">
+                    <span className="text-orange font-bold">
                       ${product.reward} USDC earned
                     </span>
                   </div>

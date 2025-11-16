@@ -124,80 +124,80 @@ export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walle
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-card border-border">
+      <DialogContent className="sm:max-w-[600px] glass-strong border-glass-border shadow-glass">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-emerald/10 rounded-lg">
-              <Rocket className="w-5 h-5 text-emerald" />
+            <div className="p-2 bg-gradient-to-br from-orange to-orange-light rounded-lg shadow-orange">
+              <Rocket className="w-5 h-5 text-white" />
             </div>
-            <DialogTitle className="text-2xl">Launch Your Product</DialogTitle>
+            <DialogTitle className="text-2xl text-navy">Launch Your Product</DialogTitle>
           </div>
-          <DialogDescription>
+          <DialogDescription className="text-navy/60 font-medium">
             Share your product with the community and start earning USDC rewards from upvotes.
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Product Name *</Label>
+            <Label htmlFor="title" className="text-navy font-semibold">Product Name *</Label>
             <Input
               id="title"
               placeholder="My Awesome Product"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
-              className="bg-secondary/50 border-border"
+              className="glass border-glass-border focus:border-orange"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tagline">Tagline *</Label>
+            <Label htmlFor="tagline" className="text-navy font-semibold">Tagline *</Label>
             <Input
               id="tagline"
               placeholder="One-line description that captures the essence"
               value={formData.tagline}
               onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
               required
-              className="bg-secondary/50 border-border"
+              className="glass border-glass-border focus:border-orange"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-navy font-semibold">Description</Label>
             <Textarea
               id="description"
               placeholder="Tell the community more about your product..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
-              className="bg-secondary/50 border-border resize-none"
+              className="glass border-glass-border resize-none focus:border-orange"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="makerAddress">Payout Wallet Address *</Label>
+            <Label htmlFor="makerAddress" className="text-navy font-semibold">Payout Wallet Address *</Label>
             <Input
               id="makerAddress"
               placeholder="0x..."
               value={formData.makerAddress || (walletAddress || '')}
               onChange={(e) => setFormData({ ...formData, makerAddress: e.target.value })}
               required
-              className="bg-secondary/50 border-border"
+              className="glass border-glass-border focus:border-orange"
             />
-            <p className="text-xs text-muted-foreground">Arc testnet address where you'll receive USDC payouts</p>
+            <p className="text-xs text-navy/60 font-medium">Arc testnet address where you'll receive USDC payouts</p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category *</Label>
+            <Label htmlFor="category" className="text-navy font-semibold">Category *</Label>
             <Select
               value={formData.category}
               onValueChange={(value) => setFormData({ ...formData, category: value })}
               required
             >
-              <SelectTrigger className="bg-secondary/50 border-border">
+              <SelectTrigger className="glass border-glass-border focus:border-orange">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="glass-strong border-glass-border">
                 <SelectItem value="finance">Finance</SelectItem>
                 <SelectItem value="web3">Web3</SelectItem>
                 <SelectItem value="ai">AI Tools</SelectItem>
@@ -214,14 +214,14 @@ export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walle
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="flex-1 glass border-glass-border hover:shadow-glass-hover text-navy"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-gradient-to-r from-emerald to-emerald-glow hover:opacity-90 text-background"
+              className="flex-1 bg-gradient-to-r from-orange to-orange-light hover:shadow-orange text-white border-0 font-bold"
             >
               {isSubmitting ? 'Submitting...' : 'Launch Product 🚀'}
             </Button>

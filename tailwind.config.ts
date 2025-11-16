@@ -47,11 +47,18 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        emerald: {
-          DEFAULT: "hsl(var(--emerald))",
-          glow: "hsl(var(--emerald-glow))",
+        orange: {
+          DEFAULT: "hsl(var(--orange))",
+          light: "hsl(var(--orange-light))",
         },
-        electric: "hsl(var(--electric))",
+        navy: {
+          DEFAULT: "hsl(var(--navy))",
+          light: "hsl(var(--navy-light))",
+        },
+        glass: {
+          bg: "hsl(var(--glass-bg))",
+          border: "hsl(var(--glass-border))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -77,10 +84,18 @@ export default {
         },
         "glow": {
           "0%, 100%": {
-            boxShadow: "0 0 20px hsl(var(--emerald) / 0.3)",
+            boxShadow: "0 0 20px hsl(var(--orange) / 0.3)",
           },
           "50%": {
-            boxShadow: "0 0 40px hsl(var(--emerald) / 0.6)",
+            boxShadow: "0 0 40px hsl(var(--orange) / 0.6)",
+          },
+        },
+        "shimmer": {
+          "0%": {
+            backgroundPosition: "-1000px 0",
+          },
+          "100%": {
+            backgroundPosition: "1000px 0",
           },
         },
         "float": {
@@ -97,6 +112,7 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "glow": "glow 2s ease-in-out infinite",
         "float": "float 3s ease-in-out infinite",
+        "shimmer": "shimmer 3s ease-in-out infinite",
       },
     },
   },
