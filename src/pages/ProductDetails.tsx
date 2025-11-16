@@ -81,6 +81,7 @@ const ProductDetails = () => {
       const foundProduct = data.products?.find((p: any) => p.id === id);
       
       if (foundProduct) {
+        console.log('Loaded product:', foundProduct);
         setProduct(foundProduct);
       } else {
         toast({
@@ -157,13 +158,15 @@ const ProductDetails = () => {
         return;
       }
 
+      console.log('Vote successful, response:', data);
       setHasUpvoted(true);
       toast({
         title: "Vote Recorded! 🎉",
         description: `Total votes: ${data.votes}. ${data.payoutStatus === 'paid' ? 'Payout triggered!' : ''}`,
       });
 
-      loadProduct();
+      // Reload to get fresh data
+      await loadProduct();
     } catch (error) {
       console.error('Error voting:', error);
       toast({

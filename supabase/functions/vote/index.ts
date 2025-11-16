@@ -124,6 +124,7 @@ serve(async (req) => {
       });
 
     if (voteError) {
+      console.log('Vote insert error:', voteError);
       if (voteError.code === '23505') { // Duplicate key error
         return new Response(
           JSON.stringify({ error: 'You have already voted for this product', votes: product.vote_count, payoutStatus: product.payout_status }),
@@ -137,13 +138,20 @@ serve(async (req) => {
       );
     }
 
+    console.log('Vote inserted successfully for product:', productId);
+
     // Get current vote count
-    const { count } = await supabase
+    const { count, error: countError } = await supabase
       .from('votes')
       .select('*', { count: 'exact', head: true })
       .eq('product_id', productId);
 
+    if (countError) {
+      console.error('Error counting votes:', countError);
+    }
+
     const voteCount = count || 0;
+    console.log('Total votes for product after insert:', { productId, voteCount, rawCount: count });
 
     // Update product vote count
     const { error: updateError } = await supabase
@@ -153,6 +161,8 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating vote count:', updateError);
+    } else {
+      console.log('Product vote_count updated successfully:', { productId, newVoteCount: voteCount });
     }
 
     // Check if we hit threshold and should trigger payout
