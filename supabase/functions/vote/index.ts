@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { voteSchema, checkRateLimit, verifySignatureMessage } from "../_shared/validation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,12 +58,41 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, voterAddress } = await req.json();
+    const body = await req.json();
     
-    if (!productId || !voterAddress) {
+    // Validate input schema
+    const validation = voteSchema.safeParse(body);
+    if (!validation.success) {
       return new Response(
-        JSON.stringify({ error: 'productId and voterAddress required' }),
+        JSON.stringify({ error: 'Validation failed', details: validation.error.issues[0].message }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { productId, voterAddress, signature, message, timestamp } = validation.data;
+    
+    // Verify signature message format
+    const sigVerification = verifySignatureMessage(voterAddress, message, timestamp);
+    if (!sigVerification.valid) {
+      return new Response(
+        JSON.stringify({ error: sigVerification.error || 'Invalid signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Rate limiting per wallet address and per IP
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+    if (!checkRateLimit(`vote:${voterAddress}`, 20, 60 * 60 * 1000)) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 votes per wallet per hour.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!checkRateLimit(`vote-ip:${clientIp}`, 50, 60 * 60 * 1000)) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -90,7 +120,7 @@ serve(async (req) => {
       .from('votes')
       .insert({
         product_id: productId,
-        voter_address: voterAddress.toLowerCase()
+        voter_address: voterAddress
       });
 
     if (voteError) {
@@ -102,7 +132,7 @@ serve(async (req) => {
       }
       console.error('Error inserting vote:', voteError);
       return new Response(
-        JSON.stringify({ error: voteError.message }),
+        JSON.stringify({ error: 'Failed to record vote' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -172,7 +202,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in vote:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'An error occurred while processing your vote' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
