@@ -71,8 +71,8 @@ serve(async (req) => {
 
     const { productId, voterAddress, signature, message, timestamp } = validation.data;
     
-    // Verify signature message format
-    const sigVerification = verifySignatureMessage(voterAddress, message, timestamp);
+    // Verify cryptographic signature
+    const sigVerification = verifySignatureMessage(voterAddress, message, signature, timestamp);
     if (!sigVerification.valid) {
       return new Response(
         JSON.stringify({ error: sigVerification.error || 'Invalid signature' }),
@@ -80,16 +80,16 @@ serve(async (req) => {
       );
     }
 
-    // Rate limiting per wallet address and per IP
+    // Rate limiting per wallet address and per IP (database-backed)
     const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
-    if (!checkRateLimit(`vote:${voterAddress}`, 20, 60 * 60 * 1000)) {
+    if (!(await checkRateLimit(`vote:${voterAddress}`, 20, 60 * 60 * 1000))) {
       return new Response(
         JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 votes per wallet per hour.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    if (!checkRateLimit(`vote-ip:${clientIp}`, 50, 60 * 60 * 1000)) {
+    if (!(await checkRateLimit(`vote-ip:${clientIp}`, 50, 60 * 60 * 1000))) {
       return new Response(
         JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
