@@ -17,28 +17,32 @@ interface ProductCardProps {
   maker: string;
   imageUrl?: string;
   rank?: number;
+  payoutStatus?: string;
+  onVote?: (productId: string) => void;
+  canVote?: boolean;
 }
 
 export const ProductCard = ({ 
+  id,
   name, 
   tagline, 
   description, 
-  upvotes: initialUpvotes, 
+  upvotes, 
   comments, 
-  reward: initialReward,
+  reward,
   category,
   maker,
   imageUrl,
-  rank
+  rank,
+  payoutStatus,
+  onVote,
+  canVote = false
 }: ProductCardProps) => {
-  const [upvotes, setUpvotes] = useState(initialUpvotes);
   const [hasUpvoted, setHasUpvoted] = useState(false);
-  const [reward, setReward] = useState(initialReward);
   
   const handleUpvote = () => {
-    if (!hasUpvoted) {
-      setUpvotes(prev => prev + 1);
-      setReward(prev => prev + 0.1);
+    if (!hasUpvoted && onVote && canVote) {
+      onVote(id);
       setHasUpvoted(true);
     }
   };
@@ -52,7 +56,7 @@ export const ProductCard = ({
             variant="outline"
             size="sm"
             onClick={handleUpvote}
-            disabled={hasUpvoted}
+            disabled={hasUpvoted || !canVote}
             className={cn(
               "h-12 w-12 rounded-lg border-2 transition-all",
               hasUpvoted 
@@ -79,6 +83,11 @@ export const ProductCard = ({
                 <h3 className="text-xl font-bold text-foreground group-hover:text-emerald transition-colors">
                   {name}
                 </h3>
+                {payoutStatus && payoutStatus !== 'none' && (
+                  <Badge variant={payoutStatus === 'paid' ? 'default' : 'secondary'}>
+                    {payoutStatus === 'paid' ? '💰 Paid' : payoutStatus === 'pending' ? '⏳ Pending' : '❌ Failed'}
+                  </Badge>
+                )}
               </div>
               <p className="text-muted-foreground mb-3">{tagline}</p>
               <p className="text-sm text-muted-foreground/80 line-clamp-2">{description}</p>

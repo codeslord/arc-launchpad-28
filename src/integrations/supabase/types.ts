@@ -14,7 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          maker_address: string
+          payout_data: Json | null
+          payout_status: string
+          tagline: string | null
+          title: string
+          updated_at: string
+          vote_count: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          maker_address: string
+          payout_data?: Json | null
+          payout_status?: string
+          tagline?: string | null
+          title: string
+          updated_at?: string
+          vote_count?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          maker_address?: string
+          payout_data?: Json | null
+          payout_status?: string
+          tagline?: string | null
+          title?: string
+          updated_at?: string
+          vote_count?: number
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          voter_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          voter_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          voter_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
