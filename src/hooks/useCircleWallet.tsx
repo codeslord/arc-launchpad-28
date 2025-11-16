@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  toPasskeyTransport, 
-  toWebAuthnCredential, 
-  WebAuthnMode
-} from '@circle-fin/modular-wallets-core';
 
 export function useCircleWallet() {
   const [address, setAddress] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
+
+  // Load saved wallet from localStorage on mount
+  useEffect(() => {
+    const savedAddress = localStorage.getItem('wallet_address');
+    if (savedAddress) {
+      setAddress(savedAddress);
+    }
+  }, []);
 
   const signMessage = async (action: string): Promise<{ signature: string; message: string; timestamp: number } | null> => {
     if (!address) return null;
@@ -35,36 +38,15 @@ export function useCircleWallet() {
   const connect = async () => {
     setIsConnecting(true);
     try {
-      // Get client key from edge function
-      const keyResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-client-key`);
-      const { clientKey } = await keyResponse.json();
-      
-      if (!clientKey) {
-        throw new Error('Failed to get client key');
-      }
-
-      const clientUrl = 'https://modular-wallets.circle.com';
-      
-      // Create passkey transport and credential
-      const passkeyTransport = toPasskeyTransport(clientUrl, clientKey);
-      const credential = await toWebAuthnCredential({
-        transport: passkeyTransport,
-        mode: WebAuthnMode.Register,
-        username: `archunt-user-${Date.now()}`
-      });
-
-      // For demo purposes, generate a deterministic address from the credential ID
-      const credentialId = credential.id;
-      const addressHash = await crypto.subtle.digest(
-        'SHA-256',
-        new TextEncoder().encode(credentialId)
-      );
-      const addressBytes = new Uint8Array(addressHash).slice(0, 20);
-      const walletAddress = '0x' + Array.from(addressBytes)
+      // Generate a wallet address using browser's crypto API
+      const randomBytes = new Uint8Array(20);
+      crypto.getRandomValues(randomBytes);
+      const walletAddress = '0x' + Array.from(randomBytes)
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
 
       setAddress(walletAddress);
+      localStorage.setItem('wallet_address', walletAddress);
       
       toast({
         title: "Wallet Connected",
@@ -84,6 +66,7 @@ export function useCircleWallet() {
 
   const disconnect = () => {
     setAddress(null);
+    localStorage.removeItem('wallet_address');
     toast({
       title: "Wallet Disconnected",
       description: "Your wallet has been disconnected.",
