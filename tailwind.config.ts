@@ -55,6 +55,9 @@ export default {
           DEFAULT: "hsl(var(--navy))",
           light: "hsl(var(--navy-light))",
         },
+        emerald: {
+          DEFAULT: "hsl(var(--emerald))",
+        },
         glass: {
           bg: "hsl(var(--glass-bg))",
           border: "hsl(var(--glass-border))",

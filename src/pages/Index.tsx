@@ -6,7 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { SubmitProductDialog } from "@/components/SubmitProductDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Clock, Flame, Calendar, Sparkles, Rocket, Award, Zap } from "lucide-react";
 import { useCircleWallet } from "@/hooks/useCircleWallet";
 import { useToast } from "@/hooks/use-toast";
 
@@ -159,6 +159,8 @@ const Index = () => {
     }
   };
 
+  const filteredProducts = getFilteredProducts();
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -170,75 +172,114 @@ const Index = () => {
       <Hero onLaunchClick={() => setSubmitDialogOpen(true)} />
       
       <div className="container mx-auto px-4 py-12" id="products">
-        <div className="max-w-5xl mx-auto space-y-8">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h2 className="text-3xl font-bold text-foreground">Today's Launches</h2>
-                <Badge variant="outline" className="bg-emerald/10 border-emerald text-emerald">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  {getFilteredProducts().length} Active
-                </Badge>
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Rocket className="w-8 h-8 text-orange" />
+              <div>
+                <h2 className="text-3xl font-bold text-foreground">Discover Products</h2>
+                <p className="text-muted-foreground text-sm">Vote for products you love and earn rewards</p>
               </div>
-              <span className="text-sm text-muted-foreground hidden md:block">
-                10 votes = 1 USDC payout
-              </span>
             </div>
+            <Badge variant="outline" className="bg-emerald-50 border-emerald-500 text-emerald-700 px-4 py-2">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              {filteredProducts.length} Products
+            </Badge>
+          </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4 items-center justify-between glass p-4 rounded-xl">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-navy/70">Sort by:</span>
+          {/* Filter Section */}
+          <div className="glass rounded-2xl p-6 space-y-4">
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Sort By */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-orange" />
+                  <span className="text-sm font-semibold text-foreground">Sort by</span>
+                </div>
                 <div className="flex gap-2">
                   <Button
                     variant={sortBy === 'votes' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSortBy('votes')}
-                    className={sortBy === 'votes' ? 'bg-gradient-to-r from-orange to-orange-light text-white' : 'glass border-glass-border'}
+                    className={sortBy === 'votes' 
+                      ? 'bg-gradient-to-r from-orange to-orange-light text-white hover:shadow-lg' 
+                      : 'glass border-glass-border hover:border-orange'}
                   >
+                    <Flame className="w-4 h-4 mr-2" />
                     Most Voted
                   </Button>
                   <Button
                     variant={sortBy === 'recent' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSortBy('recent')}
-                    className={sortBy === 'recent' ? 'bg-gradient-to-r from-orange to-orange-light text-white' : 'glass border-glass-border'}
+                    className={sortBy === 'recent' 
+                      ? 'bg-gradient-to-r from-orange to-orange-light text-white hover:shadow-lg' 
+                      : 'glass border-glass-border hover:border-orange'}
                   >
+                    <Clock className="w-4 h-4 mr-2" />
                     Most Recent
                   </Button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-navy/70">Time:</span>
+              {/* Time Filter */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calendar className="w-4 h-4 text-orange" />
+                  <span className="text-sm font-semibold text-foreground">Time Period</span>
+                </div>
                 <div className="flex gap-2 flex-wrap">
-                  {['day', 'week', 'month', 'year', 'all'].map((filter) => (
+                  {[
+                    { value: 'day', label: 'Day' },
+                    { value: 'week', label: 'Week' },
+                    { value: 'month', label: 'Month' },
+                    { value: 'year', label: 'Year' },
+                    { value: 'all', label: 'All Time' },
+                  ].map((filter) => (
                     <Button
-                      key={filter}
-                      variant={timeFilter === filter ? 'default' : 'outline'}
+                      key={filter.value}
+                      variant={timeFilter === filter.value ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setTimeFilter(filter as typeof timeFilter)}
-                      className={timeFilter === filter ? 'bg-gradient-to-r from-orange to-orange-light text-white' : 'glass border-glass-border'}
+                      onClick={() => setTimeFilter(filter.value as typeof timeFilter)}
+                      className={timeFilter === filter.value 
+                        ? 'bg-gradient-to-r from-orange to-orange-light text-white hover:shadow-lg' 
+                        : 'glass border-glass-border hover:border-orange'}
                     >
-                      {filter === 'all' ? 'All Time' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                      {filter.label}
                     </Button>
                   ))}
                 </div>
               </div>
             </div>
+
+            {/* Info Banner */}
+            <div className="glass-strong rounded-xl p-4 flex items-center gap-3">
+              <Zap className="w-5 h-5 text-orange flex-shrink-0" />
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">Earn rewards!</span> Every 10 votes = 1 USDC automatically sent to product makers
+              </p>
+            </div>
           </div>
           
+          {/* Products List */}
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Loading products...</p>
+            <div className="text-center py-16">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange mb-4"></div>
+              <p className="text-muted-foreground">Loading amazing products...</p>
             </div>
-          ) : getFilteredProducts().length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No products found with these filters. Try adjusting your selection!</p>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-16 glass rounded-2xl">
+              <Award className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">No products found</h3>
+              <p className="text-muted-foreground mb-6">Try adjusting your filters or check back later!</p>
+              <Button onClick={() => setTimeFilter('all')} variant="outline">
+                Show All Products
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {getFilteredProducts().map((product, index) => (
+              {filteredProducts.map((product, index) => (
                 <ProductCard 
                   key={product.id} 
                   id={product.id}
@@ -261,12 +302,17 @@ const Index = () => {
         </div>
       </div>
       
+      {/* Leaderboard CTA */}
       <div className="container mx-auto px-4 py-16 border-t border-glass-border" id="leaderboard">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Top Products</h2>
-          <p className="text-muted-foreground mb-6">Check out the highest-rated products</p>
+        <div className="max-w-4xl mx-auto text-center glass rounded-2xl p-12">
+          <Award className="w-16 h-16 text-orange mx-auto mb-6" />
+          <h2 className="text-3xl font-bold mb-4">Top Products Leaderboard</h2>
+          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Discover the highest-rated products and see who's leading the community
+          </p>
           <Link to="/leaderboard">
-            <Button className="bg-gradient-to-r from-orange to-orange-light hover:shadow-glass text-white">
+            <Button size="lg" className="bg-gradient-to-r from-orange to-orange-light hover:shadow-lg text-white">
+              <TrendingUp className="w-5 h-5 mr-2" />
               View Full Leaderboard
             </Button>
           </Link>
@@ -281,9 +327,9 @@ const Index = () => {
           </p>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center space-y-3">
-              <div className="w-12 h-12 mx-auto bg-gradient-to-br from-emerald to-emerald-glow rounded-lg flex items-center justify-center text-background font-bold text-xl">
-                1
+            <div className="text-center space-y-4 glass rounded-2xl p-8 hover:shadow-glass-hover transition-all">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange to-orange-light rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-orange">
+                <Rocket className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold">Submit Your Product</h3>
               <p className="text-muted-foreground">
@@ -291,9 +337,9 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="text-center space-y-3">
-              <div className="w-12 h-12 mx-auto bg-gradient-to-br from-electric to-accent rounded-lg flex items-center justify-center text-background font-bold text-xl">
-                2
+            <div className="text-center space-y-4 glass rounded-2xl p-8 hover:shadow-glass-hover transition-all">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange to-orange-light rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-orange">
+                <TrendingUp className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold">Get Community Upvotes</h3>
               <p className="text-muted-foreground">
@@ -301,9 +347,9 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="text-center space-y-3">
-              <div className="w-12 h-12 mx-auto bg-gradient-to-br from-emerald to-electric rounded-lg flex items-center justify-center text-background font-bold text-xl">
-                3
+            <div className="text-center space-y-4 glass rounded-2xl p-8 hover:shadow-glass-hover transition-all">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange to-orange-light rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-orange">
+                <Zap className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold">Earn USDC Rewards</h3>
               <p className="text-muted-foreground">
