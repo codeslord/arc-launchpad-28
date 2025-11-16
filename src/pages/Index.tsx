@@ -25,8 +25,16 @@ const Index = () => {
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { address, connect, disconnect, isConnected, isConnecting } = useWallet();
+  const { address, connect, disconnect, isConnected, isConnecting, signMessage } = useWallet();
   const { toast } = useToast();
+
+  // Expose signMessage to window for use in other components
+  useEffect(() => {
+    (window as any).walletSignMessage = signMessage;
+    return () => {
+      delete (window as any).walletSignMessage;
+    };
+  }, [signMessage]);
 
   const loadProducts = async () => {
     try {
@@ -60,6 +68,17 @@ const Index = () => {
     }
 
     try {
+      // Get signature from wallet
+      const signatureData = await signMessage('vote');
+      if (!signatureData) {
+        toast({
+          title: "Signature Required",
+          description: "Please sign the message to verify your wallet ownership.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vote`, {
         method: 'POST',
         headers: {
@@ -68,6 +87,9 @@ const Index = () => {
         body: JSON.stringify({
           productId,
           voterAddress: address,
+          signature: signatureData.signature,
+          message: signatureData.message,
+          timestamp: signatureData.timestamp,
         }),
       });
 

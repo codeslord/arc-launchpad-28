@@ -41,10 +41,20 @@ export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walle
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.makerAddress) {
+    if (!formData.makerAddress || !walletAddress) {
       toast({
         title: "Wallet Required",
-        description: "Please provide a wallet address to receive payouts.",
+        description: "Please connect your wallet to submit a product.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate wallet address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(formData.makerAddress)) {
+      toast({
+        title: "Invalid Wallet Address",
+        description: "Please provide a valid wallet address (0x followed by 40 hex characters).",
         variant: "destructive",
       });
       return;
@@ -53,6 +63,12 @@ export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walle
     setIsSubmitting(true);
     
     try {
+      // Get signature from wallet
+      const signatureData = await (window as any).walletSignMessage?.('submit-product');
+      if (!signatureData) {
+        throw new Error('Failed to sign transaction. Please ensure your wallet is connected.');
+      }
+
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-product`, {
         method: 'POST',
         headers: {
@@ -64,13 +80,17 @@ export const SubmitProductDialog = ({ open, onOpenChange, onSubmitSuccess, walle
           description: formData.description,
           makerAddress: formData.makerAddress,
           category: formData.category || 'General',
+          signature: signatureData.signature,
+          message: signatureData.message,
+          timestamp: signatureData.timestamp,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit product');
+        const errorMsg = data.details || data.error || 'Failed to submit product';
+        throw new Error(errorMsg);
       }
 
       toast({

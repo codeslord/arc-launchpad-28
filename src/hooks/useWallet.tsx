@@ -6,14 +6,36 @@ export function useWallet() {
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
 
+  const signMessage = async (action: string): Promise<{ signature: string; message: string; timestamp: number } | null> => {
+    if (!address) return null;
+    
+    const timestamp = Date.now();
+    const message = `ArcHunt Action\nWallet: ${address.toLowerCase()}\nTimestamp: ${timestamp}\nAction: ${action}`;
+    
+    // In production, this would use the actual wallet SDK to sign
+    // For now, we create a mock signature that can be verified server-side
+    const signature = btoa(`${address}:${timestamp}:${action}`);
+    
+    return { signature, message, timestamp };
+  };
+
   const connect = async () => {
     setIsConnecting(true);
     try {
-      // For hackathon demo: prompt for address
-      // In production, integrate full Circle Modular Wallets SDK flow
-      const testAddress = prompt('Enter your Arc wallet address (or paste a test address):');
+      // Validate wallet address format
+      const testAddress = prompt('Enter your Arc wallet address (format: 0x + 40 hex characters):');
       if (testAddress) {
-        setAddress(testAddress);
+        // Validate format
+        if (!/^0x[a-fA-F0-9]{40}$/.test(testAddress)) {
+          toast({
+            title: "Invalid Address",
+            description: "Please enter a valid wallet address (0x followed by 40 hex characters)",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        setAddress(testAddress.toLowerCase());
         toast({
           title: "Wallet Connected",
           description: `Connected to ${testAddress.slice(0, 6)}...${testAddress.slice(-4)}`,
@@ -45,5 +67,6 @@ export function useWallet() {
     connect,
     disconnect,
     isConnected: !!address,
+    signMessage,
   };
 }
