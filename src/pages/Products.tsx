@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { Hero } from "@/components/Hero";
 import { ProductCard } from "@/components/ProductCard";
 import { SubmitProductDialog } from "@/components/SubmitProductDialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Rocket, Award, Zap, ArrowRight } from "lucide-react";
+import { TrendingUp, Clock, Flame, Calendar, Sparkles, Rocket, Award, Zap } from "lucide-react";
 import { useCircleWallet } from "@/hooks/useCircleWallet";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,14 +20,15 @@ interface Product {
   created_at: string;
 }
 
-const Index = () => {
+const Products = () => {
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<'recent' | 'votes'>('votes');
+  const [timeFilter, setTimeFilter] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('all');
   const { address, connect, disconnect, isConnected, isConnecting, signMessage } = useCircleWallet();
   const { toast } = useToast();
 
-  // Expose signMessage to window for use in other components
   useEffect(() => {
     (window as any).walletSignMessage = signMessage;
     return () => {
@@ -56,7 +56,6 @@ const Index = () => {
   const getFilteredProducts = () => {
     let filtered = [...products];
 
-    // Apply time filter
     if (timeFilter !== 'all') {
       const now = new Date();
       const cutoffDate = new Date();
@@ -79,7 +78,6 @@ const Index = () => {
       filtered = filtered.filter(p => new Date(p.created_at) >= cutoffDate);
     }
 
-    // Apply sort
     if (sortBy === 'votes') {
       filtered.sort((a, b) => b.vote_count - a.vote_count);
     } else {
@@ -104,7 +102,6 @@ const Index = () => {
     }
 
     try {
-      // Get signature from wallet
       const signatureData = await signMessage('vote');
       if (!signatureData) {
         toast({
@@ -156,6 +153,8 @@ const Index = () => {
     }
   };
 
+  const filteredProducts = getFilteredProducts();
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -164,35 +163,116 @@ const Index = () => {
         onDisconnect={disconnect}
         isConnecting={isConnecting}
       />
-      <Hero onLaunchClick={() => setSubmitDialogOpen(true)} />
       
-      {/* Featured Products Section */}
-      <div className="container mx-auto px-4 py-16" id="products">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Rocket className="w-8 h-8 text-orange" />
               <div>
-                <h2 className="text-3xl font-bold text-foreground">Top Products Today</h2>
-                <p className="text-muted-foreground text-sm">Community favorites rising to the top</p>
+                <h1 className="text-3xl font-bold text-foreground">Discover Products</h1>
+                <p className="text-muted-foreground text-sm">Vote for products you love and earn rewards</p>
               </div>
             </div>
-            <Link to="/products">
-              <Button className="bg-gradient-to-r from-orange to-orange-light hover:shadow-lg text-white">
-                View All Products
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+            <Badge variant="outline" className="bg-emerald-50 border-emerald-500 text-emerald-700 px-4 py-2">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              {filteredProducts.length} Products
+            </Badge>
           </div>
 
+          {/* Filter Section */}
+          <div className="glass rounded-2xl p-6 space-y-4">
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Sort By */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-orange" />
+                  <span className="text-sm font-semibold text-foreground">Sort by</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={sortBy === 'votes' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSortBy('votes')}
+                    className={sortBy === 'votes' 
+                      ? 'bg-gradient-to-r from-orange to-orange-light text-white hover:shadow-lg' 
+                      : 'glass border-glass-border hover:border-orange'}
+                  >
+                    <Flame className="w-4 h-4 mr-2" />
+                    Most Voted
+                  </Button>
+                  <Button
+                    variant={sortBy === 'recent' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSortBy('recent')}
+                    className={sortBy === 'recent' 
+                      ? 'bg-gradient-to-r from-orange to-orange-light text-white hover:shadow-lg' 
+                      : 'glass border-glass-border hover:border-orange'}
+                  >
+                    <Clock className="w-4 h-4 mr-2" />
+                    Most Recent
+                  </Button>
+                </div>
+              </div>
+
+              {/* Time Filter */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calendar className="w-4 h-4 text-orange" />
+                  <span className="text-sm font-semibold text-foreground">Time Period</span>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { value: 'day', label: 'Day' },
+                    { value: 'week', label: 'Week' },
+                    { value: 'month', label: 'Month' },
+                    { value: 'year', label: 'Year' },
+                    { value: 'all', label: 'All Time' },
+                  ].map((filter) => (
+                    <Button
+                      key={filter.value}
+                      variant={timeFilter === filter.value ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeFilter(filter.value as typeof timeFilter)}
+                      className={timeFilter === filter.value 
+                        ? 'bg-gradient-to-r from-orange to-orange-light text-white hover:shadow-lg' 
+                        : 'glass border-glass-border hover:border-orange'}
+                    >
+                      {filter.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Info Banner */}
+            <div className="glass-strong rounded-xl p-4 flex items-center gap-3">
+              <Zap className="w-5 h-5 text-orange flex-shrink-0" />
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">Earn rewards!</span> Every 10 votes = 1 USDC automatically sent to product makers
+              </p>
+            </div>
+          </div>
+          
+          {/* Products List */}
           {loading ? (
-            <div className="text-center py-12">
+            <div className="text-center py-16">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange mb-4"></div>
-              <p className="text-muted-foreground">Loading products...</p>
+              <p className="text-muted-foreground">Loading amazing products...</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-16 glass rounded-2xl">
+              <Award className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">No products found</h3>
+              <p className="text-muted-foreground mb-6">Try adjusting your filters or check back later!</p>
+              <Button onClick={() => setTimeFilter('all')} variant="outline">
+                Show All Products
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {products.map((product, index) => (
+              {filteredProducts.map((product, index) => (
                 <ProductCard 
                   key={product.id} 
                   id={product.id}
@@ -215,86 +295,14 @@ const Index = () => {
         </div>
       </div>
       
-      {/* Leaderboard CTA */}
-      <div className="container mx-auto px-4 py-16 border-t border-glass-border" id="leaderboard">
-        <div className="max-w-4xl mx-auto text-center glass rounded-2xl p-12">
-          <Award className="w-16 h-16 text-orange mx-auto mb-6" />
-          <h2 className="text-3xl font-bold mb-4">Top Products Leaderboard</h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Discover the highest-rated products and see who's leading the community
-          </p>
-          <Link to="/leaderboard">
-            <Button size="lg" className="bg-gradient-to-r from-orange to-orange-light hover:shadow-lg text-white">
-              <TrendingUp className="w-5 h-5 mr-2" />
-              View Full Leaderboard
-            </Button>
-          </Link>
-        </div>
-      </div>
-      
-      <div className="container mx-auto px-4 py-16 border-t border-border" id="how-it-works">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-4">How It Works</h2>
-          <p className="text-muted-foreground text-center mb-12">
-            Launch products, earn real rewards powered by Arc blockchain
-          </p>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center space-y-4 glass rounded-2xl p-8 hover:shadow-glass-hover transition-all">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange to-orange-light rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-orange">
-                <Rocket className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-semibold">Submit Your Product</h3>
-              <p className="text-muted-foreground">
-                Share your product with the community. Add details, images, and what makes it special.
-              </p>
-            </div>
-            
-            <div className="text-center space-y-4 glass rounded-2xl p-8 hover:shadow-glass-hover transition-all">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange to-orange-light rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-orange">
-                <TrendingUp className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-semibold">Get Community Upvotes</h3>
-              <p className="text-muted-foreground">
-                Community discovers and upvotes products they love. Every 10 upvotes = 1 USDC reward.
-              </p>
-            </div>
-            
-            <div className="text-center space-y-4 glass rounded-2xl p-8 hover:shadow-glass-hover transition-all">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange to-orange-light rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-orange">
-                <Zap className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-semibold">Earn USDC Rewards</h3>
-              <p className="text-muted-foreground">
-                Rewards automatically transfer to your wallet on Arc network. Fast, transparent, secure.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <footer className="border-t border-border mt-16">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-br from-emerald to-electric rounded" />
-              <span className="font-semibold">Arc Hunt</span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Powered by Arc Layer-1 Blockchain · Built for the future of product discovery
-            </p>
-          </div>
-        </div>
-      </footer>
-      
       <SubmitProductDialog 
-        open={submitDialogOpen} 
+        open={submitDialogOpen}
         onOpenChange={setSubmitDialogOpen}
-        onSubmitSuccess={loadProducts}
+        onSuccess={loadProducts}
         walletAddress={address}
       />
     </div>
   );
 };
 
-export default Index;
+export default Products;
